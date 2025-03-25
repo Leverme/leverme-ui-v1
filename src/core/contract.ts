@@ -6,9 +6,11 @@ const config = {
             "0x3E795e7203e1D9a74348498EC00BAc6d76b28F1F"
         ],
         tokens:{
+            "wmon":"0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
             "usdt":"0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
             "usdc":"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-            "wbtc":"0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6"
+            "wbtc":"0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+            "weth":"0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"
         },
         lp:{
             "lpeth":"0xFa948F259603076edD11Df4F0867FBd6Ef8C69D4",
@@ -1209,6 +1211,11 @@ const config = {
     }
     
 }
+
+/**
+ * 🚀 ERC20 Token actions
+ */
+
 const getTokenAllowance = async (token:string,me:string,who:string,publicClient:any) =>
     {
         return await publicClient.readContract({
@@ -1229,6 +1236,16 @@ const getTokenBlance = async (token:string,who:string,publicClient:any) =>
           })
     }
 
+const getTokenDecimal = async (token:string,publicClient:any) =>
+    {
+        return await publicClient.readContract({
+            address: token,
+            abi: config.abi.token,
+            functionName: 'decimals',
+          })
+    }
+
+
 const tokenApprove = async (token:string,to:string,amount:string="0",sendTx:any) =>
     {
         try {
@@ -1246,6 +1263,28 @@ const tokenApprove = async (token:string,to:string,amount:string="0",sendTx:any)
             return false;
           }
     }
+
+/**
+ * 🚀 Uniswap v2 actions 
+ */
+
+const getTokenAmountsOut = async (tokenIn:string,tokenOut:string,amount:string="0",publicClient:any) =>
+    {
+        return await publicClient.readContract({
+            address: config.address.uniswap_router,
+            abi: config.abi.uniswapV2,
+            functionName: 'getAmountsOut',
+            args: [
+                amount,
+                [tokenIn,tokenOut]
+            ]
+          })
+    }
+
+
+/**
+ * 🚀 Vault actions
+ */
 
 const deposite = async (type:number=0,amount:string="0",me:string,publicClient:any,sendTx:any) =>
 {
@@ -1337,9 +1376,19 @@ const redeem = async (type:number=0,amount:string="0",me:string,publicClient:any
 
 export {
     config,
-    deposite,
+
+    //ERC20 Tokens
     tokenApprove,
     getTokenAllowance,
     getTokenBlance,
-    redeem
+    getTokenDecimal,
+
+    //Vault
+    redeem,
+    deposite,
+
+    //Uniswap v2
+    getTokenAmountsOut,
+
+    //Leverage
 }

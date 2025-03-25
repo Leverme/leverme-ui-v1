@@ -15,7 +15,14 @@ import {faGithub , faTelegram , faXTwitter} from "@fortawesome/free-brands-svg-i
 
 import { useAccount, useSignMessage , useSendTransaction ,useWriteContract , useReadContract ,usePublicClient } from 'wagmi'
 
-import { deposite ,getTokenAllowance,config,redeem, getTokenBlance} from '../core/contract';
+import { deposite ,
+  getTokenAllowance,
+  config,
+  redeem,
+  getTokenBlance,
+  getTokenAmountsOut,
+  getTokenDecimal,
+} from '../core/contract';
 
 const Home: NextPage = () => {
   const { address,isConnected } = useAccount()
@@ -44,20 +51,21 @@ const Home: NextPage = () => {
     { label: '7x', value: '7' },
     { label: '10x', value: '10' },
   ];
-  const [selected, setSelected] = useState('3');
-  const [sliderVal, setSliderVal] = useState(5);
+  const [selected, setSelected] = useState('1');
+  const [sliderVal, setSliderVal] = useState(1);
 
   //Input controller
-  const [value, setValue] = useState(5);
-  const [final, setFinal] = useState(5);
+  const [value, setValue] = useState(1);
+  const [final, setFinal] = useState(1);
 
   //Token Selector
   const fromTokenSelector = [
-    { label: 'MON', value: 'mon' },
+    { label: 'MON', value: 'wmon' },
     { label: 'USDT', value: 'usdt' },
     { label: 'USDC', value: 'usdc' },
   ];
-  const [fromTokenSelected, setFromTokenSelected] = useState('mon');
+  const [fromTokenSelected, setFromTokenSelected] = useState('wmon');
+  const [fromTokenDecimal, setFromTokenDecimal] = useState(1);
 
   const toTokenSelector = [
     { label: 'BTC', value: 'wbtc' },
@@ -65,16 +73,56 @@ const Home: NextPage = () => {
     { label: 'MON', value: 'wmon' },
   ];
   const [toTokenSelected, setToTokenSelected] = useState('wbtc');
+  const [toTokenDecimal, setToTokenDecimal] = useState(1);
 
+
+  const baseAmount = 1;
 
   const [swapRate, setSwapRate] = useState(1);
 
   //Init function
 
   useEffect(() => {
+    updateSwapRate();
+  }
+  , [fromTokenSelected,toTokenSelected]);
+
+  const updateSwapRate = async () =>
+  {
+    console.log(
+      "updateSwapRate",
+      fromTokenSelected,
+      toTokenSelected
+    )
+    if (fromTokenSelected in config.address.tokens && toTokenSelected in config.address.tokens)
+    {
+      const fromTk = config.address.tokens[fromTokenSelected as keyof typeof config.address.tokens];
+      const toTk = config.address.tokens[toTokenSelected as keyof typeof config.address.tokens];
+      let fromDecimal = await getTokenDecimal(
+        fromTk,
+        publicClient
+      )
+      setFromTokenDecimal(fromDecimal)
+      let toDecimal = await getTokenDecimal(
+        toTk,
+        publicClient
+      )
+      setToTokenDecimal(toDecimal)
+      let amount = (baseAmount * Math.pow(10,Number(fromDecimal))).toFixed(0);
+      const pairs = await getTokenAmountsOut(
+        config.address.tokens[fromTokenSelected as keyof typeof config.address.tokens],
+        config.address.tokens[toTokenSelected as keyof typeof config.address.tokens],
+        amount,
+        publicClient
+      )
+      const rate = Number(
+        pairs[1]
+      )/(baseAmount * Math.pow(10,Number(toDecimal)))
+      console.log(pairs,rate)
+      setSwapRate(rate)
+    }
 
   }
-  , []);
 
 
   return (
@@ -175,9 +223,7 @@ const Home: NextPage = () => {
                 setValue(
                   (Number(e.target.value)>0)?Number(e.target.value):0
                 )
-                setSliderVal(
-                  (Number(e.target.value)>0)?Number(e.target.value):0
-                )
+                setFinal(Number(value)*sliderVal)
               }
               }
               placeholder={"Input amount"}
@@ -198,7 +244,7 @@ const Home: NextPage = () => {
         <div className="flex gap-2.5 py-2 items-center justify-center" style={{marginTop:"20px"}}>
         <ButtonGroupWithSlider
         options={options}
-        selectedValue={selected}
+        selectedValue={sliderVal.toString()}
         onChange={(val) => {
           setSelected(val)
           setFinal(Number(val)*value)
@@ -217,7 +263,7 @@ const Home: NextPage = () => {
         style={{
           fontSize:"2em"
         }}
-        >{`${final}`}</span>{` ${toTokenSelected} | ${sliderVal}x`}
+        >{`${Number((final*swapRate).toFixed(toTokenDecimal))}`}</span>{` ${toTokenSelected} | ${sliderVal}x`}
        </div>
             </div>
 
@@ -269,7 +315,18 @@ const Home: NextPage = () => {
                 //   )
                 // ) 
                 //20010000000000000000n
-                await redeem(0,"20010000000000000000",address,publicClient,writeContractAsync)
+                // await redeem(0,"20010000000000000000",address,publicClient,writeContractAsync)
+
+
+                console.log(
+
+                  await getTokenAmountsOut(
+                    config.address.tokens.usdt,
+                    config.address.tokens.wbtc,
+                    "10000000",
+                    publicClient
+                  )
+                )
               }
               }
               >
