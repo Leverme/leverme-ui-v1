@@ -1,4 +1,4 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ConnectButton,useAccountModal } from '@rainbow-me/rainbowkit';
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
@@ -12,9 +12,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faArrowRight} from "@fortawesome/free-solid-svg-icons"
 
 import {faGithub , faTelegram , faXTwitter} from "@fortawesome/free-brands-svg-icons"
+
+import { useAccount, useSignMessage , useSendTransaction ,useWriteContract , useReadContract ,usePublicClient } from 'wagmi'
+
+import { deposite ,getTokenAllowance,config,redeem, getTokenBlance} from '../core/contract';
+
 const Home: NextPage = () => {
-
-
+  const { address,isConnected } = useAccount()
+  const [signature, setSignature] = useState<string | null>(null)
+  const { signMessageAsync } = useSignMessage()
+  const { sendTransactionAsync } = useSendTransaction()
+  const publicClient = usePublicClient()
+  const { 
+    data: hash, 
+    isPending, 
+    writeContract ,
+    writeContractAsync
+  } = useWriteContract()
   //Action button
   const actionButtonGroup = [
     { label: 'Margin', value: 'margin' },
@@ -217,13 +231,45 @@ const Home: NextPage = () => {
               backgroundColor:"#d9ff00",
               fontSize:"1.3rem"
               }}
-              onClick={()=>
+              onClick={ async ()=>
               {
+                if(!address)
+                {
+                  return false;
+                }
                 console.log("PRESS CONFIRM")
 
                 //Check wallet connection 
 
                 //Do txn generate
+
+                // console.log(
+                //   await signMessageAsync(
+                //     {
+                //       message:"Hello world"
+                //     }
+                //   )
+                // )
+                
+                // await deposite(0,"10000000000000000",address,publicClient,writeContractAsync)
+                // console.log(
+                //   await getTokenAllowance(
+                //     config.address.tokens.wbtc,
+                //     address,
+                //     config.address.vault,
+                //     publicClient
+                //   )
+                // )
+
+                // console.log(
+                //   await getTokenBlance(
+                //     config.address.lp.lpeth,
+                //     address,
+                //     publicClient
+                //   )
+                // ) 
+                //20010000000000000000n
+                await redeem(0,"20010000000000000000",address,publicClient,writeContractAsync)
               }
               }
               >
