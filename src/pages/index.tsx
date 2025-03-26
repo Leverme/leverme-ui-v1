@@ -15,13 +15,15 @@ import {faGithub , faTelegram , faXTwitter} from "@fortawesome/free-brands-svg-i
 
 import { useAccount, useSignMessage , useSendTransaction ,useWriteContract , useReadContract ,usePublicClient } from 'wagmi'
 
-import { deposite ,
+import { 
+  deposite ,
   getTokenAllowance,
   config,
   redeem,
   getTokenBlance,
   getTokenAmountsOut,
   getTokenDecimal,
+  open,
 } from '../core/contract';
 
 const Home: NextPage = () => {
@@ -36,6 +38,26 @@ const Home: NextPage = () => {
     writeContract ,
     writeContractAsync
   } = useWriteContract()
+
+  const [contractBaseInfo, setContractBaseInfo] = useState(
+    {
+      pool:
+      {
+        mon:"0",
+        usdt:"0",
+        usdc:"0",
+      },
+      me:
+      {
+        mon:"0",
+        usdt:"0",
+        usdc:"0",
+      }
+    }
+  );
+
+  const [kline, setKline] = useState("https://www.gmgn.cc/kline/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599");
+
   //Action button
   const actionButtonGroup = [
     { label: 'Margin', value: 'margin' },
@@ -82,10 +104,21 @@ const Home: NextPage = () => {
 
   //Init function
 
+  const [lock, setLock] = useState(false);
+
   useEffect(() => {
     updateSwapRate();
+    if(!lock && address)
+    {
+      //Page init comment 
+      setLock(true)
+      updateBaseStakeInfo();
+      const interval = setInterval(updateBaseStakeInfo, 60000); // Then every 60 seconds
+      return () => clearInterval(interval);
+    }
+    
   }
-  , [fromTokenSelected,toTokenSelected]);
+  , [fromTokenSelected,toTokenSelected,address]);
 
   const updateSwapRate = async () =>
   {
@@ -98,16 +131,22 @@ const Home: NextPage = () => {
     {
       const fromTk = config.address.tokens[fromTokenSelected as keyof typeof config.address.tokens];
       const toTk = config.address.tokens[toTokenSelected as keyof typeof config.address.tokens];
-      let fromDecimal = await getTokenDecimal(
-        fromTk,
-        publicClient
-      )
+
+      // let fromDecimal = await getTokenDecimal(
+      //   fromTk,
+      //   publicClient
+      // )
+      // setFromTokenDecimal(fromDecimal)
+      // let toDecimal = await getTokenDecimal(
+      //   toTk,
+      //   publicClient
+      // )
+      let fromDecimal = config.address.tokensInfo[fromTokenSelected as keyof typeof config.address.tokensInfo].decimal;
       setFromTokenDecimal(fromDecimal)
-      let toDecimal = await getTokenDecimal(
-        toTk,
-        publicClient
-      )
+      let toDecimal = config.address.tokensInfo[toTokenSelected as keyof typeof config.address.tokensInfo].decimal;
       setToTokenDecimal(toDecimal)
+
+      setKline(config.address.tokensInfo[toTokenSelected as keyof typeof config.address.tokensInfo].kline)
       let amount = (baseAmount * Math.pow(10,Number(fromDecimal))).toFixed(0);
       const pairs = await getTokenAmountsOut(
         config.address.tokens[fromTokenSelected as keyof typeof config.address.tokens],
@@ -118,12 +157,197 @@ const Home: NextPage = () => {
       const rate = Number(
         pairs[1]
       )/(baseAmount * Math.pow(10,Number(toDecimal)))
-      console.log(pairs,rate)
+      console.log(pairs,rate ,fromDecimal,toDecimal)
       setSwapRate(rate)
     }
 
   }
 
+  const updateBaseStakeInfo = async () =>
+  {
+    if(!publicClient)
+    {
+      console.log("🔥 publicClinet Not Found")
+      return 0 ;
+    }
+
+    const info = {
+      pool:
+      {
+        mon: (
+              Number(await publicClient.getBalance(
+                {
+                  address:config.address.vault as any
+                }
+              ))/Math.pow(10,config.address.tokensInfo.wmon.decimal)
+        ).toFixed(3),
+        usdt:(
+          Number(await getTokenBlance(
+            config.address.tokens.usdt,
+            config.address.vault,
+            publicClient
+            )
+          )/Math.pow(10,config.address.tokensInfo.usdt.decimal)
+      ).toFixed(3),
+        usdc:(
+          Number(await getTokenBlance(
+            config.address.tokens.usdc,
+            config.address.vault,
+            publicClient
+            )
+          )/Math.pow(10,config.address.tokensInfo.usdc.decimal)
+      ).toFixed(3),
+      },
+      me:
+      {
+        mon:(
+          Number(await getTokenBlance(
+            config.address.lp.lpeth,
+            address?address:config.address.lp.lpeth,
+            publicClient
+          )
+        )/Math.pow(10,config.address.lpInfo.wmon.decimal)
+      ).toFixed(3),
+        usdt:(
+          Number(await getTokenBlance(
+            config.address.lp.lpusdt,
+            address?address:config.address.lp.lpusdt,
+            publicClient
+          )
+        )/Math.pow(10,config.address.lpInfo.usdt.decimal)
+      ).toFixed(3),
+        usdc:(
+          Number(await getTokenBlance(
+            config.address.lp.lpusdc,
+            address?address:config.address.lp.lpusdc,
+            publicClient
+          )
+        )/Math.pow(10,config.address.lpInfo.usdc.decimal)
+      ).toFixed(3),
+      }
+    }
+    console.log(info,address)
+    setContractBaseInfo(
+      info
+    )
+  }
+
+  const deposit = async()=>
+  {
+      if(!address)
+      {
+        return false;
+      }
+      const finalValue = (
+        value*Math.pow(10,fromTokenDecimal)
+      ).toFixed(0)
+      console.log("finalValue",finalValue)
+      const tx = await deposite(
+        config.address.tokensInfo[fromTokenSelected as keyof typeof config.address.tokensInfo].id,
+        finalValue,
+        address,
+        publicClient,
+        writeContractAsync
+      )
+      console.log(tx)
+  }
+
+  const withdraw = async()=>
+  {
+    if(!address)
+      {
+        return false;
+      }
+      const finalValue = (
+        value*Math.pow(10,config.address.lpInfo.wmon.decimal)
+      ).toFixed(0)
+      const tx = await redeem(
+        config.address.lpInfo[fromTokenSelected as keyof typeof config.address.lpInfo].id,
+        finalValue,
+        address,
+        publicClient,
+        writeContractAsync
+      )
+      console.log(tx)
+  }
+
+  const openPosition = async()=>
+  {
+    if(!address || !publicClient)
+      {
+        return false;
+      }
+      const mortgage = (
+        value*Math.pow(10,fromTokenDecimal)
+      ).toFixed(0)
+      console.log("mortgage",mortgage)
+      const tx = await open(
+        config.address.tokensInfo[fromTokenSelected as keyof typeof config.address.tokensInfo].id,
+        toTokenSelected,
+        mortgage,
+        (Number(mortgage)*sliderVal).toString(),
+        address,
+        publicClient,
+        writeContractAsync
+      )
+      console.log(tx)
+  }
+
+  const debug = async ()=>
+  {
+    if(!address || !publicClient)
+      {
+        return false;
+      }
+      console.log("PRESS CONFIRM")
+
+      //Check wallet connection 
+
+      //Do txn generate
+
+      // console.log(
+      //   await signMessageAsync(
+      //     {
+      //       message:"Hello world"
+      //     }
+      //   )
+      // )
+      
+      // await deposite(0,"10000000000000000",address,publicClient,writeContractAsync)
+      // console.log(
+      //   await getTokenAllowance(
+      //     config.address.tokens.wbtc,
+      //     address,
+      //     config.address.vault,
+      //     publicClient
+      //   )
+      // )
+
+      // console.log(
+      //   await getTokenBlance(
+      //     config.address.lp.lpeth,
+      //     address,
+      //     publicClient
+      //   )
+      // ) 
+      //20010000000000000000n
+      // await redeem(0,"20010000000000000000",address,publicClient,writeContractAsync)
+
+      // publicClient.getBalance(
+      //   {
+      //     address:address
+      //   }
+      // )
+      console.log(
+
+        await getTokenAmountsOut(
+          config.address.tokens.usdt,
+          config.address.tokens.wbtc,
+          "10000000",
+          publicClient
+        )
+      )
+  }
 
   return (
     <div className={styles.container}       style={{ 
@@ -182,7 +406,7 @@ const Home: NextPage = () => {
                 overflow: "hidden",
               }}
               className="rounded-lg"
-              src="https://www.gmgn.cc/kline/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"> 
+              src={kline}> 
             </iframe> 
           </a>
 
@@ -277,58 +501,7 @@ const Home: NextPage = () => {
               backgroundColor:"#d9ff00",
               fontSize:"1.3rem"
               }}
-              onClick={ async ()=>
-              {
-                if(!address)
-                {
-                  return false;
-                }
-                console.log("PRESS CONFIRM")
-
-                //Check wallet connection 
-
-                //Do txn generate
-
-                // console.log(
-                //   await signMessageAsync(
-                //     {
-                //       message:"Hello world"
-                //     }
-                //   )
-                // )
-                
-                // await deposite(0,"10000000000000000",address,publicClient,writeContractAsync)
-                // console.log(
-                //   await getTokenAllowance(
-                //     config.address.tokens.wbtc,
-                //     address,
-                //     config.address.vault,
-                //     publicClient
-                //   )
-                // )
-
-                // console.log(
-                //   await getTokenBlance(
-                //     config.address.lp.lpeth,
-                //     address,
-                //     publicClient
-                //   )
-                // ) 
-                //20010000000000000000n
-                // await redeem(0,"20010000000000000000",address,publicClient,writeContractAsync)
-
-
-                console.log(
-
-                  await getTokenAmountsOut(
-                    config.address.tokens.usdt,
-                    config.address.tokens.wbtc,
-                    "10000000",
-                    publicClient
-                  )
-                )
-              }
-              }
+              onClick={ openPosition }
               >
                 Confirm
               </button>
@@ -341,13 +514,158 @@ const Home: NextPage = () => {
 
         <div className={styles.grid} style={{ width:"100%" , display : (actionSelected=="stake") ? "flex" : "none"}}>
           <a className={styles.card} style={{ width:"80%" , minHeight:"500px" , minWidth:"350px"}}>
-            <div style={{
+            {/* <div style={{
               width:"100%",
               fontSize:"5rem",
               color:"#d9ff00"
             }}>
               Comming Soon
+            </div> */}
+            <div className=" gap-2.5 py-2 " style={{
+                  display: 'flex', justifyContent: 'space-evenly' , marginTop:"20px"
+            }}>
+              <span
+              className={styles.stakeTitle}
+              > 
+                Pool MON 
+              </span>  
+              <span
+              className={styles.stakeTitle}
+              > 
+                Pool USDT
+              </span> 
+                            <span
+              className={styles.stakeTitle}
+              > 
+                Pool USDC
+              </span> 
             </div>
+
+
+            <div className=" gap-2.5 py-2 " style={{
+                  display: 'flex', justifyContent: 'space-evenly', marginTop:"20px"
+            }}>
+              <span className={styles.stakeValue}> 
+                {
+                  contractBaseInfo.pool.mon
+                }
+              </span>  
+              <span className={styles.stakeValue}> 
+                {
+                  contractBaseInfo.pool.usdt
+                }
+              </span> 
+              <span className={styles.stakeValue}> 
+                {
+                  contractBaseInfo.pool.usdc
+                }
+              </span> 
+            </div>
+
+            <div style={{width:"100%" , backgroundColor:"#d9ff00" , height:"5px" , marginTop:"20px"}}></div>
+            <div className=" gap-2.5 py-2 " style={{
+                  display: 'flex', justifyContent: 'space-evenly', marginTop:"20px"
+            }}>
+              <span
+              className={styles.stakeTitle}
+              > 
+                LPMON
+              </span>  
+              <span
+              className={styles.stakeTitle}
+              > 
+                LPUSDT
+              </span> 
+              <span
+              className={styles.stakeTitle}
+              > 
+                LPUSDC
+              </span> 
+            </div>
+            
+            <div className=" gap-2.5 py-2 " style={{
+                  display: 'flex', justifyContent: 'space-evenly', marginTop:"20px"
+            }}>
+              <span className={styles.stakeValue}> 
+                {
+                  contractBaseInfo.me.mon
+                }
+              </span>  
+              <span className={styles.stakeValue}> 
+                {
+                  contractBaseInfo.me.usdt
+                }
+              </span> 
+              <span className={styles.stakeValue}> 
+                {
+                  contractBaseInfo.me.usdc
+                }
+              </span> 
+            </div>
+            <div style={{width:"100%" , backgroundColor:"#d9ff00" , height:"5px" , marginTop:"20px"}}></div>
+            <div className=" gap-2.5 py-2 " style={{
+                  display: 'flex', justifyContent: 'space-evenly', marginTop:"40px"
+            }}>
+              <DropdownButtonGroup
+                widths='20%'
+                options={fromTokenSelector}
+                selectedValue={fromTokenSelected}
+                onChange={(value) => setFromTokenSelected(value)}
+              />
+
+          <input
+              type="text"
+              value={value}
+              onChange={(e)=>
+              {
+                console.log("change now :",e.target.value)
+                setValue(
+                  (Number(e.target.value)>0)?Number(e.target.value):0
+                )
+                setFinal(Number(value)*sliderVal)
+              }
+              }
+              placeholder={"Input amount"}
+              style={{
+                maxHeight:"40px",
+                borderRadius: '8px',
+                background: 'transparent', 
+                border: '1px solid #ccc', 
+                padding: '8px 12px',
+                outline: 'none',
+                color: '#fff',
+                fontSize:"1.3rem",
+                width:"20%",
+                textAlign: 'center',   
+              }}
+            />
+            <button color="warning" style={{
+              width : "30%",
+              height:"40px",
+              borderRadius: '80px', 
+              overflow: 'hidden',
+              backgroundColor:"#d9ff00",
+              fontSize:"1.3rem"
+              }}
+              onClick={ deposit }
+              >
+                Deposite
+            </button>
+
+            <button color="warning" style={{
+              width : "30%",
+              height:"40px",
+              borderRadius: '80px', 
+              overflow: 'hidden',
+              backgroundColor:"#d9ff00",
+              fontSize:"1.3rem"
+              }}
+              onClick={ withdraw }
+              >
+                Withdraw
+              </button>
+            </div>
+            
           </a>
         </div>
 
@@ -366,6 +684,7 @@ const Home: NextPage = () => {
 
         <div style={{
           width:"20%",
+          minWidth:"300px",
           display: 'flex', justifyContent: 'space-evenly',
           marginTop:"10px"
         }}>

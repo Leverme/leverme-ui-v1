@@ -96,6 +96,16 @@
   line-height: 1.5;
 }
 
+.stakeTitle {
+  font: 1.5em sans-serif;
+  color: white;
+}
+
+.stakeValue {
+  font: 2em sans-serif;
+  color: #d9ff00;
+}
+
 @media (max-width: 600px) {
   .grid {
     width: 100%;

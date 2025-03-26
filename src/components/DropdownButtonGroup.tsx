@@ -42,7 +42,7 @@ const DropdownButtonGroup: React.FC<DropdownButtonGroupProps> = ({
           width: '100%',
           padding: '8px 16px',
           border: '1px solid #ccc',
-          borderRadius: '8px',
+          borderRadius: '80px',
           background: '#d9ff00',
           cursor: 'pointer',
           textAlign: 'left',

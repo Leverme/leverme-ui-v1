@@ -2,9 +2,9 @@ const config = {
     address:{
         uniswap_router : "0xa5e0829caced8ffdd4de3c43696c57f7d7a678ff",
         vault:"0xC08D4577472319C2712874928C44AB65bADcD851",
-        pairs:[
-            "0x3E795e7203e1D9a74348498EC00BAc6d76b28F1F"
-        ],
+        pairs:{
+            "wbtc":"0x3E795e7203e1D9a74348498EC00BAc6d76b28F1F",
+        },
         tokens:{
             "wmon":"0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
             "usdt":"0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
@@ -12,10 +12,68 @@ const config = {
             "wbtc":"0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
             "weth":"0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"
         },
+        tokensInfo:{
+            wmon:{
+                "id":0,
+                "decimal":18,
+                "name":"Wrapped Polygon Ecosystem Token",
+                "symbol":"WPOL",
+                "kline":"https://www.gmgn.cc/kline/eth/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+                },
+            usdt:{
+                "id":1,
+                "decimal":6,
+                "name":"(PoS) Tether USD",
+                "symbol":"USDT",
+                "kline":"https://www.gmgn.cc/kline/eth/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+                },
+            usdc:{
+                "id":2,
+                "decimal":6,
+                "name":"USD Coin",
+                "symbol":"USDC",
+                "kline":"https://www.gmgn.cc/kline/eth/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+                },
+            wbtc:{
+                "id":9,
+                "decimal":8,
+                "name":"(PoS) Wrapped BTC",
+                "symbol":"WBTC",
+                "kline":"https://www.gmgn.cc/kline/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+                },
+            weth:{
+                "id":9,
+                "decimal":18,
+                "name":"WETH",
+                "symbol":"Wrapped Ether",
+                "kline":"https://www.gmgn.cc/kline/eth/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+                },
+        },
         lp:{
             "lpeth":"0xFa948F259603076edD11Df4F0867FBd6Ef8C69D4",
             "lpusdt":"0x101edBa279f8B5Bf31942a59bb977509Bb871012",
             "lpusdc":"0xAb7Ae4846D639701806865f1a0F1F437C4DEe9EB"
+        },
+        lpInfo:{
+            "wmon":{
+                "id":0,
+                "decimal":18,
+                "name":"WETH",
+                "symbol":"Wrapped Ether"
+              },
+            "usdt":{
+                "id":1,
+                "decimal":18,
+                "name":"WETH",
+                "symbol":"Wrapped Ether"
+              },
+            "usdc":{
+                "id":2,
+                "decimal":18,
+                "name":"WETH",
+                "symbol":"Wrapped Ether"
+              },
+              
         }
     },
     abi:{
@@ -1374,6 +1432,65 @@ const redeem = async (type:number=0,amount:string="0",me:string,publicClient:any
           }
     }
 
+/**
+ * 🚀 Leverage contract actions
+ */
+
+const open = async (type:number=0,toToken:string,mortgage:string="0",amount:string="0",me:string,publicClient:any,sendTx:any) =>
+    {
+        try {
+            const toPair =  config.address.pairs[toToken as keyof typeof config.address.pairs];
+            console.log("Now try open")
+            let ret ;
+            if(type == 0)
+            {
+                //ETH
+                ret = await sendTx({
+                    address: toPair,
+                    abi: config.abi.pair,
+                    functionName: 'buy',
+                    args: [
+                        type, 
+                        mortgage,
+                        amount
+                      ],
+                    value:mortgage
+                  })
+            }else{
+                let token = config.address.tokens.usdt;
+                if(type ==2 )
+                {
+                    token = config.address.tokens.usdc;
+                }
+                //Check allowance
+                if(amount > await getTokenAllowance(token,me,config.address.vault,publicClient))
+                {
+                    await tokenApprove(
+                        token,
+                        config.address.vault,
+                        amount,
+                        sendTx
+                    )
+                }
+                //Send tx
+                ret = await sendTx({
+                    address: toPair,
+                    abi: config.abi.pair,
+                    functionName: 'buy',
+                    args: [
+                        type, 
+                        mortgage,
+                        amount
+                    ],
+                  })
+            }
+            return ret;
+          } catch (error) {
+            console.error(error)
+            return false;
+          }
+    }
+
 export {
     config,
 
@@ -1391,4 +1508,5 @@ export {
     getTokenAmountsOut,
 
     //Leverage
+    open,
 }
