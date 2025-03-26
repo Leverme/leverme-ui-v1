@@ -24,6 +24,8 @@ import {
   getTokenAmountsOut,
   getTokenDecimal,
   open,
+  getUserPositions,
+
 } from '../core/contract';
 
 const Home: NextPage = () => {
@@ -57,6 +59,22 @@ const Home: NextPage = () => {
   );
 
   const [kline, setKline] = useState("https://www.gmgn.cc/kline/eth/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599");
+
+  const [onGoingPosition, setOnGoingPosition] = useState(
+    [
+      {
+        token:"wbtc",
+        tokenDecimal:6,
+        baseToken:"wmon",
+        mortgageAmount:100000000000000000,
+        investAmount:300000000000000000,
+        tokenAmount:82,
+        leverageRate:0,
+        openTime:1742973699,
+      }
+    ]
+  );
+
 
   //Action button
   const actionButtonGroup = [
@@ -338,14 +356,18 @@ const Home: NextPage = () => {
       //     address:address
       //   }
       // )
-      console.log(
+      // console.log(
 
-        await getTokenAmountsOut(
-          config.address.tokens.usdt,
-          config.address.tokens.wbtc,
-          "10000000",
-          publicClient
-        )
+      //   await getTokenAmountsOut(
+      //     config.address.tokens.usdt,
+      //     config.address.tokens.wbtc,
+      //     "10000000",
+      //     publicClient
+      //   )
+      // )
+
+      console.log(
+        await getUserPositions(address , publicClient)
       )
   }
 
@@ -409,7 +431,6 @@ const Home: NextPage = () => {
               src={kline}> 
             </iframe> 
           </a>
-
           <a className={styles.card}  style={{ width:"20%" , minHeight:"500px", minWidth:"350px"}}>
               <div className=" gap-2.5 py-2 " style={{
                 display: 'flex', justifyContent: 'space-evenly'
@@ -506,9 +527,99 @@ const Home: NextPage = () => {
                 Confirm
               </button>
             </div>
+
+            <div className="flex gap-2.5 py-2 items-center justify-center">
+            <button color="warning" style={{
+              width : "100%",
+              height:"40px",
+              borderRadius: '80px', 
+              overflow: 'hidden',
+              marginTop: '30px',
+              backgroundColor:"#d9ff00",
+              fontSize:"1.3rem"
+              }}
+              onClick={ debug }
+              >
+                Debug
+              </button>
+            </div>
         </a>
         </div>
 
+        <div className={styles.grid} style={{ width:"100%" , display : (actionSelected=="margin") ? "flex" : "none"}}>
+          {
+            onGoingPosition.map((item,index) => (
+              <a className={styles.card} style={{ width:"95%" , minHeight:"100px" , minWidth:"350px"}}>
+
+              <div className=" gap-2.5 py-2 " style={{
+                  display: 'flex', justifyContent: 'space-evenly' 
+              }}>
+                <div>
+                   {
+                    item.baseToken
+                   }
+                </div>
+
+                <div>
+                   {
+                    item.investAmount
+                   }
+                </div>
+
+
+                <div>
+                   {
+                    item.leverageRate
+                   }
+                </div>
+
+
+                <div>
+                   {
+                    item.mortgageAmount
+                   }
+                </div>
+
+                <div>
+                   {
+                    item.tokenAmount
+                   }
+                </div>
+
+
+                <div>
+                   {
+                    item.token
+                   }
+                </div>
+
+                <div>
+                   {
+                    (new Date(item.openTime*1000)).toLocaleString()
+                   }
+                </div>
+
+                <div className="flex gap-2.5 py-2 items-center justify-center">
+                  <button color="warning" style={{
+                    minWidth : "50rpx",
+                    minHeight:"40px",
+                    borderRadius: '80px', 
+                    overflow: 'hidden',
+                    backgroundColor:"#d9ff00",
+                    fontSize:"1.3rem"
+                    }}
+                    onClick={ debug }
+                    >
+                      Close
+                    </button>
+            </div>
+              </div>
+            </a>
+            )
+          )
+          }
+
+        </div>
 
 
 

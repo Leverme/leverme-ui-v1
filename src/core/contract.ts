@@ -1436,6 +1436,50 @@ const redeem = async (type:number=0,amount:string="0",me:string,publicClient:any
  * 🚀 Leverage contract actions
  */
 
+const getPositionDetails = async (toPair : string,id:number,publicClient:any) =>
+{
+    const details = await publicClient.readContract({
+        address: toPair,
+        abi: config.abi.pair,
+        functionName: 'positions',
+        args: [id]
+    })
+    return {
+        type:details[0],
+        owner : details[1],
+        mortgageAmount : details[2],
+        investAmount : details[3],
+        tokenAmount : details[4],
+        isOpen : details[5],
+        openTime : details[6]
+    }
+}
+const getUserPositions = async (who:string,publicClient:any) =>
+    {
+        const ret :any[] = [];
+        for( let i in config.address.pairs)
+        {
+
+            const toPair =  config.address.pairs[i as keyof typeof config.address.pairs];
+            const r = await publicClient.readContract({
+                address: toPair,
+                abi: config.abi.pair,
+                functionName: 'getUserPositions',
+                args: [who]
+            })
+            for(i in r)
+            {
+                const details = await getPositionDetails(toPair,r[i],publicClient)
+                console.log(
+                    details
+                );
+            }
+            
+        }
+        return ret;
+    }
+
+
 const open = async (type:number=0,toToken:string,mortgage:string="0",amount:string="0",me:string,publicClient:any,sendTx:any) =>
     {
         try {
@@ -1509,4 +1553,6 @@ export {
 
     //Leverage
     open,
+    getUserPositions,
+    getPositionDetails
 }
