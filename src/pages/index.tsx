@@ -24,7 +24,9 @@ import {
   getTokenAmountsOut,
   getTokenDecimal,
   open,
+  close,
   getUserPositions,
+  getTokenTotalSupply,
 
 } from '../core/contract';
 
@@ -46,6 +48,7 @@ const Home: NextPage = () => {
       pool:
       {
         mon:"0",
+        lpmon:"0",
         usdt:"0",
         usdc:"0",
       },
@@ -63,9 +66,12 @@ const Home: NextPage = () => {
   const [onGoingPosition, setOnGoingPosition] = useState(
     [
       {
-        token:"wbtc",
+        id:0,
+        router:"",
+        token:"mock",
         tokenDecimal:6,
         baseToken:"wmon",
+        baseTokenDecimal:18,
         mortgageAmount:100000000000000000,
         investAmount:300000000000000000,
         tokenAmount:82,
@@ -199,6 +205,13 @@ const Home: NextPage = () => {
                 }
               ))/Math.pow(10,config.address.tokensInfo.wmon.decimal)
         ).toFixed(3),
+        lpmon: (
+          Number(await getTokenTotalSupply(
+            config.address.lp.lpeth,
+            publicClient
+            )
+          )/Math.pow(10,config.address.lpInfo.wmon.decimal)
+        ).toFixed(3),
         usdt:(
           Number(await getTokenBlance(
             config.address.tokens.usdt,
@@ -248,6 +261,13 @@ const Home: NextPage = () => {
     setContractBaseInfo(
       info
     )
+
+    if(address)
+    {
+      setOnGoingPosition(
+        await getUserPositions(address,publicClient)
+      )
+    }
   }
 
   const deposit = async()=>
@@ -310,6 +330,22 @@ const Home: NextPage = () => {
       )
       console.log(tx)
   }
+
+
+  const closePosition = async( index : number)=>
+    {
+      if(!address || !publicClient)
+        {
+          return false;
+        }
+        const position = onGoingPosition[index]
+        const tx = await close(
+          position.id,
+          position.router,
+          writeContractAsync
+        )
+        console.log(tx)
+    }
 
   const debug = async ()=>
   {
@@ -546,54 +582,131 @@ const Home: NextPage = () => {
         </a>
         </div>
 
-        <div className={styles.grid} style={{ width:"100%" , display : (actionSelected=="margin") ? "flex" : "none"}}>
+        <div className={styles.grid} style={{ width:"70%" , display : (actionSelected=="margin" && onGoingPosition[0].token != "mock") ? "flex" : "none"}}>
+
+        <a className={styles.table} style={{ width:"95%" , minHeight:"50px" , minWidth:"350px"}}>
+
+        <div className=" gap-2.5 py-2 " style={{
+                  display: 'flex', justifyContent: 'space-evenly' 
+              }}>
+                <div className={styles.positionTitle} >
+                   {
+                    "Position"
+                   }
+                </div>
+
+                <div className={styles.positionTitle} >
+                   {
+                    "Margin | Size"
+                   }
+                </div>
+
+
+                <div className={styles.positionTitle} >
+                   {
+                    "Token Size"
+                   }
+                </div>
+
+
+                <div className={styles.positionTitle} >
+                   {
+                    "Position Time"
+                   }
+                </div>
+
+                <div className={styles.positionTitle} >
+                   {
+                    "Action"
+                   }
+                </div>
+
+              </div>
+
+        </a>
           {
             onGoingPosition.map((item,index) => (
-              <a className={styles.card} style={{ width:"95%" , minHeight:"100px" , minWidth:"350px"}}>
+              <a className={styles.table} style={{ width:"95%" , minHeight:"50px" , minWidth:"350px"}}>
 
               <div className=" gap-2.5 py-2 " style={{
                   display: 'flex', justifyContent: 'space-evenly' 
               }}>
                 <div>
+                <span className={styles.positionTitle} >
+                {item.baseToken+" "} 
+                </span>
+
+                <span
+                  style={{
+                    color:"#fff",
+                  }}
+                  >
+                  <FontAwesomeIcon icon={faArrowRight} size='xl'/>
+                </span>
+
+                <span className={styles.positionTitle} >
+                {" "+item.token}
+                </span>
+                </div>
+
+                <div className={styles.positionTitle} >
                    {
-                    item.baseToken
+                    `${
+                      Number(
+                        (
+                          item.mortgageAmount
+                          /
+                          Math.pow(10,item.baseTokenDecimal
+
+                          )
+                        ).toFixed(
+                          item.baseTokenDecimal
+                        )
+                      )
+                    }`
+                   }
+                    {
+                      " / "
+                    }
+                    {
+                    `${
+                      Number(
+                        (
+                          item.investAmount
+                          /
+                          Math.pow(10,item.baseTokenDecimal
+
+                          )
+                        ).toFixed(
+                          item.baseTokenDecimal
+                        )
+                      )
+                    }`
                    }
                 </div>
 
                 <div>
-                   {
-                    item.investAmount
+                  <div className={styles.positionTitle} >
+                  {
+                    `${
+                      Number(
+                        (
+                          item.tokenAmount
+                          /
+                          Math.pow(10,item.tokenDecimal
+
+                          )
+                        ).toFixed(
+                          item.tokenDecimal
+                        )
+                      )
+                    }  |  ${item.leverageRate}x`
                    }
+                  </div>
+                   
                 </div>
 
-
-                <div>
-                   {
-                    item.leverageRate
-                   }
-                </div>
-
-
-                <div>
-                   {
-                    item.mortgageAmount
-                   }
-                </div>
-
-                <div>
-                   {
-                    item.tokenAmount
-                   }
-                </div>
-
-
-                <div>
-                   {
-                    item.token
-                   }
-                </div>
-
-                <div>
+                <div className={styles.positionText} >
                    {
                     (new Date(item.openTime*1000)).toLocaleString()
                    }
@@ -608,11 +721,15 @@ const Home: NextPage = () => {
                     backgroundColor:"#d9ff00",
                     fontSize:"1.3rem"
                     }}
-                    onClick={ debug }
+                    onClick={ ()=>
+                    {
+                      closePosition(index)
+                    }
+                     }
                     >
                       Close
                     </button>
-            </div>
+                </div>
               </div>
             </a>
             )
@@ -639,17 +756,22 @@ const Home: NextPage = () => {
               className={styles.stakeTitle}
               > 
                 Pool MON 
-              </span>  
+              </span>
               <span
+              className={styles.stakeTitle}
+              > 
+                Borrow Out 
+              </span>  
+              {/* <span
               className={styles.stakeTitle}
               > 
                 Pool USDT
               </span> 
-                            <span
+              <span
               className={styles.stakeTitle}
               > 
                 Pool USDC
-              </span> 
+              </span>  */}
             </div>
 
 
@@ -660,8 +782,14 @@ const Home: NextPage = () => {
                 {
                   contractBaseInfo.pool.mon
                 }
-              </span>  
+              </span>
+
               <span className={styles.stakeValue}> 
+                {
+                  (Number(contractBaseInfo.pool.lpmon) - Number(contractBaseInfo.pool.mon)).toFixed(3)
+                }
+              </span>  
+              {/* <span className={styles.stakeValue}> 
                 {
                   contractBaseInfo.pool.usdt
                 }
@@ -670,7 +798,7 @@ const Home: NextPage = () => {
                 {
                   contractBaseInfo.pool.usdc
                 }
-              </span> 
+              </span>  */}
             </div>
 
             <div style={{width:"100%" , backgroundColor:"#d9ff00" , height:"5px" , marginTop:"20px"}}></div>
@@ -680,9 +808,9 @@ const Home: NextPage = () => {
               <span
               className={styles.stakeTitle}
               > 
-                LPMON
+                My LPMON
               </span>  
-              <span
+              {/* <span
               className={styles.stakeTitle}
               > 
                 LPUSDT
@@ -691,7 +819,7 @@ const Home: NextPage = () => {
               className={styles.stakeTitle}
               > 
                 LPUSDC
-              </span> 
+              </span>  */}
             </div>
             
             <div className=" gap-2.5 py-2 " style={{
@@ -702,7 +830,7 @@ const Home: NextPage = () => {
                   contractBaseInfo.me.mon
                 }
               </span>  
-              <span className={styles.stakeValue}> 
+              {/* <span className={styles.stakeValue}> 
                 {
                   contractBaseInfo.me.usdt
                 }
@@ -711,7 +839,7 @@ const Home: NextPage = () => {
                 {
                   contractBaseInfo.me.usdc
                 }
-              </span> 
+              </span>  */}
             </div>
             <div style={{width:"100%" , backgroundColor:"#d9ff00" , height:"5px" , marginTop:"20px"}}></div>
             <div className=" gap-2.5 py-2 " style={{
