@@ -4,6 +4,7 @@ export const config = {
         vault:"0xC08D4577472319C2712874928C44AB65bADcD851",
         pairs:{
             "wbtc":"0x3E795e7203e1D9a74348498EC00BAc6d76b28F1F",
+            "weth":"0xE3D2ac4D44dEb1CD3edA9bf3Dcf74B8Ef12921eC"
         },
         tokens:{
             "wmon":"0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",

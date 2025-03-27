@@ -107,8 +107,8 @@ const Home: NextPage = () => {
   //Token Selector
   const fromTokenSelector = [
     { label: 'MON', value: 'wmon' },
-    { label: 'USDT', value: 'usdt' },
-    { label: 'USDC', value: 'usdc' },
+    // { label: 'USDT', value: 'usdt' },
+    // { label: 'USDC', value: 'usdc' },
   ];
   const [fromTokenSelected, setFromTokenSelected] = useState('wmon');
   const [fromTokenDecimal, setFromTokenDecimal] = useState(1);
@@ -116,7 +116,7 @@ const Home: NextPage = () => {
   const toTokenSelector = [
     { label: 'BTC', value: 'wbtc' },
     { label: 'ETH', value: 'weth' },
-    { label: 'MON', value: 'wmon' },
+    // { label: 'MON', value: 'wmon' },
   ];
   const [toTokenSelected, setToTokenSelected] = useState('wbtc');
   const [toTokenDecimal, setToTokenDecimal] = useState(1);
@@ -288,6 +288,11 @@ const Home: NextPage = () => {
         writeContractAsync
       )
       console.log(tx)
+
+      //Reload data :: 
+      setTimeout(() => {
+        updateBaseStakeInfo()
+      }, 10000);
   }
 
   const withdraw = async()=>
@@ -307,6 +312,11 @@ const Home: NextPage = () => {
         writeContractAsync
       )
       console.log(tx)
+
+      //Reload data :: 
+      setTimeout(() => {
+        updateBaseStakeInfo()
+      }, 10000);
   }
 
   const openPosition = async()=>
@@ -329,6 +339,11 @@ const Home: NextPage = () => {
         writeContractAsync
       )
       console.log(tx)
+
+      //Reload data :: 
+      setTimeout(() => {
+        updateBaseStakeInfo()
+      }, 10000);
   }
 
 
@@ -345,6 +360,10 @@ const Home: NextPage = () => {
           writeContractAsync
         )
         console.log(tx)
+        //Reload data :: 
+        setTimeout(() => {
+          updateBaseStakeInfo()
+        }, 10000);
     }
 
   const debug = async ()=>
