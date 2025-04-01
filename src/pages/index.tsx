@@ -98,7 +98,7 @@ const Home: NextPage = () => {
     { label: '10x', value: '10' },
   ];
   const [selected, setSelected] = useState('1');
-  const [sliderVal, setSliderVal] = useState(1);
+  const [sliderVal, setSliderVal] = useState(3);
 
   //Input controller
   const [value, setValue] = useState(1);
