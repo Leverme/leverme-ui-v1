@@ -1,24 +1,24 @@
 export const config = {
     address:{
-        uniswap_router : "0xa5e0829caced8ffdd4de3c43696c57f7d7a678ff",
-        vault:"0xC08D4577472319C2712874928C44AB65bADcD851",
+        uniswap_router : "0xc7e09b556e1a00cfc40b1039d6615f8423136df7",
+        vault:"0xf4C41330F780875a1e9273e7D5B84A09F567Cc4d",
         pairs:{
-            "wbtc":"0x3E795e7203e1D9a74348498EC00BAc6d76b28F1F",
-            "weth":"0xE3D2ac4D44dEb1CD3edA9bf3Dcf74B8Ef12921eC"
+            // "wbtc":"0x3E795e7203e1D9a74348498EC00BAc6d76b28F1F",
+            "weth":"0xeA315B6a49C3117A16d71B85030FE459C6CA92a9"
         },
         tokens:{
-            "wmon":"0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
-            "usdt":"0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
-            "usdc":"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+            "wmon":"0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701",
+            "usdt":"0xeA315B6a49C3117A16d71B85030FE459C6CA92a9",
+            "usdc":"0xeA315B6a49C3117A16d71B85030FE459C6CA92a9",
             "wbtc":"0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-            "weth":"0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"
+            "weth":"0xB5a30b0FDc5EA94A52fDc42e3E9760Cb8449Fb37"
         },
         tokensInfo:{
             wmon:{
                 "id":0,
                 "decimal":18,
-                "name":"Wrapped Polygon Ecosystem Token",
-                "symbol":"WPOL",
+                "name":"Wrapped Monad",
+                "symbol":"WMON",
                 "kline":"https://www.gmgn.cc/kline/eth/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
                 },
             usdt:{
@@ -51,9 +51,9 @@ export const config = {
                 },
         },
         lp:{
-            "lpeth":"0xFa948F259603076edD11Df4F0867FBd6Ef8C69D4",
-            "lpusdt":"0x101edBa279f8B5Bf31942a59bb977509Bb871012",
-            "lpusdc":"0xAb7Ae4846D639701806865f1a0F1F437C4DEe9EB"
+            "lpeth":"0xaDEA4f91Bc443c9BDCD137B4D9cd3afa4e2d7007",
+            "lpusdt":"0x1916ed9F245e1620E3Ad47a7094520812825Af5D",
+            "lpusdc":"0x7a7A5047B7c2aE61227C3336BD8D7a25db7057D3"
         },
         lpInfo:{
             "wmon":{

@@ -101,7 +101,7 @@ const Home: NextPage = () => {
   const [sliderVal, setSliderVal] = useState(3);
 
   //Input controller
-  const [tmpValue, setTmpValue] = useState("");
+  const [tmpValue, setTmpValue] = useState("0.01");
   const [value, setValue] = useState(1);
   const [final, setFinal] = useState(1);
 
@@ -213,7 +213,7 @@ const Home: NextPage = () => {
             )
           )/Math.pow(10,config.address.lpInfo.wmon.decimal)
         ).toFixed(3),
-        usdt:0,
+        usdt:'0',
       //   (
       //     Number(await getTokenBlance(
       //       config.address.tokens.usdt,
@@ -222,7 +222,7 @@ const Home: NextPage = () => {
       //       )
       //     )/Math.pow(10,config.address.tokensInfo.usdt.decimal)
       // ).toFixed(3),
-        usdc:0
+        usdc:'0'
       //   (
       //     Number(await getTokenBlance(
       //       config.address.tokens.usdc,
