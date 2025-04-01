@@ -101,6 +101,7 @@ const Home: NextPage = () => {
   const [sliderVal, setSliderVal] = useState(3);
 
   //Input controller
+  const [tmpValue, setTmpValue] = useState("");
   const [value, setValue] = useState(1);
   const [final, setFinal] = useState(1);
 
@@ -118,7 +119,7 @@ const Home: NextPage = () => {
     { label: 'ETH', value: 'weth' },
     // { label: 'MON', value: 'wmon' },
   ];
-  const [toTokenSelected, setToTokenSelected] = useState('wbtc');
+  const [toTokenSelected, setToTokenSelected] = useState('weth');
   const [toTokenDecimal, setToTokenDecimal] = useState(1);
 
 
@@ -212,22 +213,24 @@ const Home: NextPage = () => {
             )
           )/Math.pow(10,config.address.lpInfo.wmon.decimal)
         ).toFixed(3),
-        usdt:(
-          Number(await getTokenBlance(
-            config.address.tokens.usdt,
-            config.address.vault,
-            publicClient
-            )
-          )/Math.pow(10,config.address.tokensInfo.usdt.decimal)
-      ).toFixed(3),
-        usdc:(
-          Number(await getTokenBlance(
-            config.address.tokens.usdc,
-            config.address.vault,
-            publicClient
-            )
-          )/Math.pow(10,config.address.tokensInfo.usdc.decimal)
-      ).toFixed(3),
+        usdt:0,
+      //   (
+      //     Number(await getTokenBlance(
+      //       config.address.tokens.usdt,
+      //       config.address.vault,
+      //       publicClient
+      //       )
+      //     )/Math.pow(10,config.address.tokensInfo.usdt.decimal)
+      // ).toFixed(3),
+        usdc:0
+      //   (
+      //     Number(await getTokenBlance(
+      //       config.address.tokens.usdc,
+      //       config.address.vault,
+      //       publicClient
+      //       )
+      //     )/Math.pow(10,config.address.tokensInfo.usdc.decimal)
+      // ).toFixed(3),
       },
       me:
       {
@@ -516,14 +519,23 @@ const Home: NextPage = () => {
             <div className="flex gap-2.5 py-2 items-center justify-center" style={{marginTop:"20px"}}>
             <input
               type="text"
-              value={value}
+              value={tmpValue}
               onChange={(e)=>
               {
                 console.log("change now :",e.target.value)
-                setValue(
-                  (Number(e.target.value)>0)?Number(e.target.value):0
+                setTmpValue(
+                  e.target.value
                 )
-                setFinal(Number(value)*sliderVal)
+
+                if(Number(e.target.value))
+                  {
+                      setValue(Number(e.target.value))
+                      setFinal(Number(value)*sliderVal)
+                  }
+                // setValue(
+                //   (Number(e.target.value)>0)?Number(e.target.value):0
+                // )
+                // setFinal(Number(value)*sliderVal)
               }
               }
               placeholder={"Input amount"}
@@ -582,7 +594,7 @@ const Home: NextPage = () => {
                 Confirm
               </button>
             </div>
-
+{/* 
             <div className="flex gap-2.5 py-2 items-center justify-center">
             <button color="warning" style={{
               width : "100%",
@@ -597,11 +609,11 @@ const Home: NextPage = () => {
               >
                 Debug
               </button>
-            </div>
+            </div> */}
         </a>
         </div>
 
-        <div className={styles.grid} style={{ width:"70%" , display : (actionSelected=="margin" && onGoingPosition[0].token != "mock") ? "flex" : "none"}}>
+        <div className={styles.grid} style={{ width:"70%" , display : (actionSelected=="margin" && (onGoingPosition.length>0) && onGoingPosition[0].token != "mock") ? "flex" : "none"}}>
 
         <a className={styles.table} style={{ width:"95%" , minHeight:"50px" , minWidth:"350px"}}>
 
@@ -873,14 +885,23 @@ const Home: NextPage = () => {
 
           <input
               type="text"
-              value={value}
+              value={tmpValue}
               onChange={(e)=>
               {
-                console.log("change now :",e.target.value)
-                setValue(
-                  (Number(e.target.value)>0)?Number(e.target.value):0
+                console.log("i change now :",e.target.value)
+                setTmpValue(
+                  e.target.value
                 )
-                setFinal(Number(value)*sliderVal)
+                if(Number(e.target.value))
+                {
+                    setValue(Number(e.target.value))
+
+                    setFinal(Number(value)*sliderVal)
+                }
+                // setValue(
+                //   (Number(e.target.value)>0)?Number(e.target.value):0
+                // )
+                
               }
               }
               placeholder={"Input amount"}
